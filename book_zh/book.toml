@@ -1,0 +1,6 @@
+[book]
+authors = ["Gascognya"]
+language = "zh"
+multilingual = false
+src = "src"
+title = "Too many lists 中文"
