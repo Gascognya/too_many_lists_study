@@ -1,4 +1,4 @@
-# Ownership 101
+# 所有权 101
 
 Now that we can construct a list, it'd be nice to be able to *do* something
 with it. We do that with "normal" (non-static) methods. Methods are a special

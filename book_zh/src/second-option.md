@@ -1,7 +1,6 @@
-# Using Option
+# 使用Option
 
-Particularly observant readers may have noticed that we actually reinvented
-a really bad version of Option:
+敏锐的读者可能已经意识到了, 我们实际上实现了一个很烂的Option:
 
 ```rust ,ignore
 enum Link {
@@ -10,12 +9,7 @@ enum Link {
 }
 ```
 
-Link is just `Option<Box<Node>>`. Now, it's nice not to have to write
-`Option<Box<Node>>` everywhere, and unlike `pop`, we're not exposing this
-to the outside world, so maybe it's fine. However Option has some *really
-nice* methods that we've been manually implementing ourselves. Let's *not*
-do that, and replace everything with Options. First, we'll do it naively
-by just renaming everything to use Some and None:
+Link 就是 `Option<Box<Node>>`. 不用到处写 `Option<Box<Node>>` 也挺好, 并且不像 `pop`, 我们不用把它向外暴露, 所以可能还不错. 然而Option 有一些 *真的很棒* 的方法不用我们自己手动实现. 让我们把所有Link全换成Option. 首先, 我们将简单重命名每样东西使用 Some 和 None:
 
 ```rust ,ignore
 use std::mem;
@@ -24,7 +18,7 @@ pub struct List {
     head: Link,
 }
 
-// yay type aliases!
+// 定义类型别名
 type Link = Option<Box<Node>>;
 
 struct Node {
@@ -67,10 +61,9 @@ impl Drop for List {
 }
 ```
 
-This is marginally better, but the big wins will come from Option's methods.
+这将稍微好一点, 但是最大的优点是来自Option的方法.
 
-First, `mem::replace(&mut option, None)` is such an incredibly
-common idiom that Option actually just went ahead and made it a method: `take`.
+第一步, `mem::replace(&mut option, None)` 是一种非常常见的习惯用法, Option实际上把它变成了一个方法: `take`.
 
 ```rust ,ignore
 pub struct List {
@@ -119,16 +112,12 @@ impl Drop for List {
 }
 ```
 
-Second, `match option { None => None, Some(x) => Some(y) }` is such an
-incredibly common idiom that it was called `map`. `map` takes a function to
-execute on the `x` in the `Some(x)` to produce the `y` in `Some(y)`. We could
-write a proper `fn` and pass it to `map`, but we'd much rather write what to
-do *inline*.
+第二步, `match option { None => None, Some(x) => Some(y) }` 常见说法为 `map`. `map` 获取一个函数, 应用于 `Some(x)` 中的 `x`  来产生 `Some(y)` 中的 `y`. 我们可以写一个合适的 `fn` , 然后将它传递给 `map`, 但是我们更愿意写一个 *内联*.
 
-The way to do this is with a *closure*. Closures are anonymous functions with
-an extra super-power: they can refer to local variables *outside* the closure!
-This makes them super useful for doing all sorts of conditional logic. The
-only place we do a `match` is in `pop`, so let's just rewrite that:
+>(译者: map就是指高阶函数, map(func) -> return func(x))
+
+我们可以通过 *闭包* 来实现. 闭包是具有额外功能的匿名函数: 它可以引用 *闭包之外* 的局部变量!
+这使得它们对于处理各种条件逻辑非常有用. 我们唯一一处使用 `match` 是在 `pop` 中, 我们可以将这里重写一下:
 
 ```rust ,ignore
 pub fn pop(&mut self) -> Option<i32> {
@@ -139,7 +128,7 @@ pub fn pop(&mut self) -> Option<i32> {
 }
 ```
 
-Ah, much better. Let's make sure we didn't break anything:
+啊, 好多了. 让我们确认下没有弄坏什么:
 
 ```text
 > cargo test
@@ -154,4 +143,4 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured
 
 ```
 
-Great! Let's move on to actually improving the code's *behaviour*.
+太棒了! 让我们继续来改进代码.

@@ -6,14 +6,14 @@
     * [New 方法](first-new.md)
     * [所有权 101](first-ownership.md)
     * [Push 方法](first-push.md)
-    * [Pop 方法](first-pop.md)
-    * [测试](first-test.md)
-    * [Drop 方法](first-drop.md)
-    * [最终代码](first-final.md)
-* [一个不错的Stack实现](second.md)
-    * [Option](second-option.md)
-    * [Generic](second-generic.md)
-    * [Peek](second-peek.md)
+    * [Pop 方法](first-pop.md) *
+    * [测试](first-test.md) *
+    * [Drop 方法](first-drop.md) *
+    * [最终代码](first-final.md) *
+* [一个不错的Stack实现](second.md) *
+    * [使用 Option](second-option.md) *
+    * [泛型](second-generic.md) *
+    * [Peek 方法](second-peek.md)
     * [IntoIter](second-into-iter.md)
     * [Iter](second-iter.md)
     * [IterMut](second-iter-mut.md)
