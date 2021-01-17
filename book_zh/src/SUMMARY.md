@@ -14,9 +14,9 @@
     * [使用 Option](second-option.md) *
     * [泛型](second-generic.md) *
     * [Peek 方法](second-peek.md)
-    * [IntoIter](second-into-iter.md)
-    * [Iter](second-iter.md)
-    * [IterMut](second-iter-mut.md)
+    * [IntoIter 实现](second-into-iter.md)
+    * [Iter 实现](second-iter.md)
+    * [IterMut 实现](second-iter-mut.md)
     * [Final Code](second-final.md)
 * [一个可持久的Stack实现](third.md)
     * [Layout](third-layout.md)

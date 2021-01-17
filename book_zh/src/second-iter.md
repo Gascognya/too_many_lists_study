@@ -9,6 +9,11 @@ element, we want to proceed to the current node's `next` node.
 
 Alright, let's try that:
 
+好吧, 我们来尝试实现下 Iter. 这次我们不能指望 List 为我们提供便利. 我们要自己动手. 我们想要的基本逻辑是用一个指针指向 我们想要输出其 next 的 node. 因为 node 可能不存在 (list 为空 或者迭代已完成), 我们需要引用一个 Option. 当我们生成一个元素, 我们需要到当前 node 的`next` node.
+
+好, 我们来试试:
+
+
 ```rust ,ignore
 pub struct Iter<T> {
     next: Option<&Node<T>>,
@@ -48,10 +53,9 @@ error[E0106]: missing lifetime specifier
    |                 ^ expected lifetime parameter
 ```
 
-Oh god. Lifetimes. I've heard of these things. I hear they're a nightmare.
+完了. 生命周期. 我听过这玩意. 大家都说它是一个梦魇.
 
-Let's try something new: see that `error[E0106]` thing? That's a compiler error
-code. We can ask rustc to explain those with, well, `--explain`:
+让我们尝试些新东西: 看到这个 `error[E0106]` 了么? 这是编译器错误码. 我们可以看看rustc的解释, 好, `--explain`:
 
 ```text
 > rustc --explain E0106
@@ -73,9 +77,7 @@ type MyStr<'a> = &'a str; //correct
 
 ```
 
-That uh... that didn't really clarify much (these docs assume we understand
-Rust better than we currently do). But it looks like we should add
-those `'a` things to our struct? Let's try that.
+嗯... 这并没有讲清很多问题 (这文档假设我们已经了解rust了). 但看起来我们应该加个 `'a` 在我们的结构体中? 试一下吧.
 
 ```
 pub struct Iter<'a, T> {
@@ -101,8 +103,7 @@ error[E0106]: missing lifetime specifier
 error: aborting due to 2 previous errors
 ```
 
-Alright I'm starting to see a pattern here... let's just add these little guys
-to everything we can:
+好吧, 让我们给所有东西都加上试试:
 
 ```rust ,ignore
 pub struct Iter<'a, T> {
@@ -148,86 +149,61 @@ error[E0063]: missing field `next` in initializer of `second::Iter<'_, _>`
    |         ^^^^ missing `next`
 ```
 
-Oh god. We broke Rust.
+完了, 搞砸了.
 
-Maybe we should actually figure out what the heck this `'a` lifetime stuff
-even means.
+可能我们要彻底理解 生命周期 `'a` 这玩意究竟是什么意思.
 
-Lifetimes can scare off a lot of people because
-they're a change to something we've known and loved since the dawn of
-programming. We've actually managed to dodge lifetimes so far, even though
-they've been tangled throughout our programs this whole time.
+生命周期吓跑了很多人, 因为它改变了我们自编程之初就知道和喜欢的东西. 截至目前为止, 我们成功避开了生命周期, 虽然我们始终没去直面它.
 
-Lifetimes are unnecessary in garbage collected languages because the garbage
-collector ensures that everything magically lives as long as it needs to. Most
-data in Rust is *manually* managed, so that data needs another solution. C and
-C++ give us a clear example what happens if you just let people take pointers
-to random data on the stack: pervasive unmanageable unsafety. This can be
-roughly separated into two classes of error:
+在有 GC 的语言中, 生命周期没有意义, 因为 GC 确保所有东西都可以正确的产生与销毁. Rust 中的大多数数据是 *手动* 管理的, 所以需要其他的解决方案. C 和
+C++ 向我们清楚地展示了, 用户拿指针随意指向堆栈上的数据会发生什么: 无处不在的危险. 
+错误大体可以分为两类:
 
-* Holding a pointer to something that went out of scope
-* Holding a pointer to something that got mutated away
+* 指向超出作用域之外的东西
+* 指向的东西被改变
 
-Lifetimes solve both of these problems, and 99% of the time, they do this in
-a totally transparent way.
+生命周期在99%的时间解决了这个问题, 用一个易懂的方式.
 
-So what's a lifetime?
+所以什么是生命周期?
 
-Quite simply, a lifetime is the name of a region (\~block/scope) of code somewhere in a program.
-That's it. When a reference is tagged with a lifetime, we're saying that it
-has to be valid for that *entire* region. Different things place requirements on
-how long a reference must and can be valid for. The entire lifetime system is in
-turn just a constraint-solving system that tries to minimize the region of every
-reference. If it successfully finds a set of lifetimes that satisfies all the
-constraints, your program compiles! Otherwise you get an error back saying that
-something didn't live long enough.
+很简单, 一个生命周期是程序中一段(块/作用域)代码的名称 .
+就是这样. 当引用被标记上生命周期时, 我们说它必须在 *整个* 区域中都有效. 
+不同的地方对引用可以或必须有效有不同的需求. 
+整个生命周期系统反过来就是一个约束求解系统, 它试图将每个引用的区域最小化. 
+如果它成功地找到了一组满足所有约束的生存期, 程序将会顺利编译! 
+否则就会返回一个错误，说某样东西存活的时间不够长.
 
-Within a function body you generally can't talk about lifetimes, and wouldn't
-want to *anyway*. The compiler has full information and can infer all the
-contraints to find the minimum lifetimes. However at the type and API-level,
-the compiler *doesn't* have all the information. It requires you to tell it
-about the relationship between different lifetimes so it can figure out what
-you're doing.
+通常在函数中我们是不讨论生命周期的, 而且也不想这么做. 编译器有足够多的信息来供他推断出所有的约束, 进而推断出最小生命周期. 然而在 类型 和 API级 上, 编译器 *不能* 拥有所有信息. 
+它要求你告诉它不同生命周期之间的关系, 这样它才能知道你要做什么.
 
-In principle, those lifetimes *could* also be left out, but
-then checking all the borrows would be a huge whole-program analysis that would
-produce mind-bogglingly non-local errors. Rust's system means all borrow
-checking can be done in each function body independently, and all your errors
-should be fairly local (or your types have incorrect signatures).
+原则上讲, 这些生命周期其实也可以不考虑, 但检查所有借用将是一个庞大的整个程序分析，将产生令人难以置信的非局部错误. Rust的系统应当所有的借阅检查都可以在每个函数体中独立完成，所有的错误都应该是局部的 (或者你的类型定义有错误的签名).
 
 But we've written references in function signatures before, and it was fine!
-That's because there are certain cases that are so common that Rust will
-automatically pick the lifetimes for you. This is *lifetime elision*.
+这是因为有些情况非常常见，Rust会自动为你挑选生命周期. 这叫做 *生命周期省略*.
 
-In particular:
+特殊情况:
 
 ```rust ,ignore
-// Only one reference in input, so the output must be derived from that input
+// 输入只有一个引用, 所以输出一定衍生自输入
 fn foo(&A) -> &B; // sugar for:
 fn foo<'a>(&'a A) -> &'a B;
 
-// Many inputs, assume they're all independent
+// 很多输入, 假设它们都是各自独立的
 fn foo(&A, &B, &C); // sugar for:
 fn foo<'a, 'b, 'c>(&'a A, &'b B, &'c C);
 
-// Methods, assume all output lifetimes are derived from `self`
+// 方法, 假设所有输出的生命周期都衍生自 `self`
 fn foo(&self, &B, &C) -> &D; // sugar for:
 fn foo<'a, 'b, 'c>(&'a self, &'b B, &'c C) -> &'a D;
 ```
 
-So what does `fn foo<'a>(&'a A) -> &'a B` *mean*? In practical terms, all it
-means is that the input must live at least as long as the output. So if you keep
-the output around for a long time, this will expand the region that the input must
-be valid for. Once you stop using the output, the compiler will know it's ok for
-the input to become invalid too.
+所以 `fn foo<'a>(&'a A) -> &'a B` 是什么意思? 在实践中, 它意味着输入项(A)一定活得比输出项(B)久. 所以如果你想保持输出(B)长时间存在, 这将扩大输入(A)的必须存在时间. 一旦你不再需要使用输出(B), 编译器会知道这时候可以允许输入(A)下班了.
 
-With this system set up, Rust can ensure nothing is used after free, and nothing
-is mutated while outstanding references exist. It just makes sure the
-constraints all work out!
+通过这个系统, Rust 可以确保没有任何东西会在释放后被调用(因为直到没有需要这个东西的时候, 才会允许它被释放. 它总是比所有需要它的东西活得久), 并且当外界引用存在时, 没有任何东西会被改变. 它确保所有约束条件都成立!
 
-Alright. So. Iter.
+好, 现在回到Iter.
 
-Let's roll back to the no lifetimes state:
+让我们回滚到没有生命周期的状态:
 
 ```rust ,ignore
 pub struct Iter<T> {
@@ -251,7 +227,7 @@ impl<T> Iterator for Iter<T> {
 }
 ```
 
-We need to add lifetimes only in function and type signatures:
+我们只需要在函数和类型定义上, 加入生命周期:
 
 ```rust ,ignore
 // Iter is generic over *some* lifetime, it doesn't care
@@ -259,23 +235,21 @@ pub struct Iter<'a, T> {
     next: Option<&'a Node<T>>,
 }
 
-// No lifetime here, List doesn't have any associated lifetimes
+// 这不写生命周期, List 不关联任何生命周期
 impl<T> List<T> {
-    // We declare a fresh lifetime here for the *exact* borrow that
-    // creates the iter. Now &self needs to be valid as long as the
-    // Iter is around.
+    // 我们为产生 Iter 的借用创建一个生命周期.
+    // 现在 &self 需要活得比 Iter 更久.
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
         Iter { next: self.head.map(|node| &node) }
     }
 }
 
-// We *do* have a lifetime here, because Iter has one that we need to define
+// 我们需要在这写生命周期, 因为 Iter 有一个我们需要定义的
 impl<'a, T> Iterator for Iter<'a, T> {
-    // Need it here too, this is a type declaration
+    // 这也需要, 这是一个类型声明, 代表着返回类型, 而返回类型中是需要标明的
     type Item = &'a T;
 
-    // None of this needs to change, handled by the above.
-    // Self continues to be incredibly hype and amazing
+    // 这不需要更改, 由上面处理.
     fn next(&mut self) -> Option<Self::Item> {
         self.next.map(|node| {
             self.next = node.next.map(|node| &node);

@@ -1,7 +1,6 @@
-# IntoIter
+# IntoIter 方法
 
-Collections are iterated in Rust using the *Iterator* trait. It's a bit more
-complicated than `Drop`:
+Rust中通过 *Iterator* trait 使集合变得可迭代. 它比 `Drop` 要复杂点:
 
 ```rust ,ignore
 pub trait Iterator {
@@ -10,33 +9,26 @@ pub trait Iterator {
 }
 ```
 
-The new kid on the block here is `type Item`. This is declaring that every
-implementation of Iterator has an *associated type* called Item. In this case,
-this is the type that it can spit out when you call `next`.
+你会发现一个新东西: `type Item`. 
+这是声明 Iterator 的每一个实现, 都有一个 *相关类型* 叫作 Item. 
+在这种情况下,它代表当你调用 `next` 时, 它可以吐出这种类型.
 
-The reason Iterator yields `Option<Self::Item>` is because the interface
-coalesces the `has_next` and `get_next` concepts. When you have the next value,
-you yield
-`Some(value)`, and when you don't you yield `None`. This makes the
-API generally more ergonomic and safe to use and implement, while avoiding
-redundant checks and logic between `has_next` and `get_next`. Nice!
+Iterator 可以生成 `Option<Self::Item>` 是因为接口整合了 `has_next` 和 `get_next` 的概念. 当存在下一个值时, 将产生 `Some(value)`, 反之则产生 `None`. 
+这使得 API 更符合人体工程学, 且使用和实现起来更安全, 
+同时避免 `has_next` 和 `get_next` 之间冗余的判断和逻辑. Nice!
 
-Sadly, Rust has nothing like a `yield` statement (yet), so we're going to have to
-implement the logic ourselves. Also, there's actually 3 different kinds of
-iterator each collection should endeavour to implement:
+很遗憾, Rust 没有像 `yield` 一样的语法 (至今), 所以我们不得不自己手动实现逻辑. 另外, 每个集合实际上都应该努力去实现三种 iterator:
 
 * IntoIter - `T`
 * IterMut - `&mut T`
 * Iter - `&T`
 
-We actually already have all the tools to implement
-IntoIter using List's interface: just call `pop` over and over. As such, we'll
-just implement IntoIter as a newtype wrapper around List:
+我们实际上已经准备好了工具, 在我们 List 的接口中: 只需要一遍又一遍的调用 `pop`. 就像这样, 我们仅仅需要实现个 IntoIter 作为来包装 List 的新类型:
 
 
 ```rust ,ignore
-// Tuple structs are an alternative form of struct,
-// useful for trivial wrappers around other types.
+// 元组结构体是结构体的替代品,
+// 非常适合来包装其他琐碎的类型.
 pub struct IntoIter<T>(List<T>);
 
 impl<T> List<T> {
@@ -48,13 +40,13 @@ impl<T> List<T> {
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        // access fields of a tuple struct numerically
+        // 以数字方式访问元组结构体的字段
         self.0.pop()
     }
 }
 ```
 
-And let's write a test:
+让我们写一段测试:
 
 ```rust ,ignore
 #[test]
@@ -85,4 +77,4 @@ test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
 
 ```
 
-Nice!
+很好!
