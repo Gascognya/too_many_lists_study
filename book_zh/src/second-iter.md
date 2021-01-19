@@ -259,7 +259,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
 }
 ```
 
-Alright, I think we got it this time y'all.
+好, 再来试一下.
 
 ```text
 cargo build
@@ -285,10 +285,9 @@ error[E0308]: mismatched types
 
 (╯°□°)╯︵ ┻━┻
 
-OK. SO. We fixed our lifetime errors but now we're getting some new type errors.
+好吧. 我们修复了生命周期错误, 但是却得到了新种类的错误.
 
-We want to be storing `&Node`'s, but we're getting `&Box<Node>`s. Ok, that's easy
-enough, we just need to dereference the Box before we take our reference:
+我们想要储存 `&Node`'s, 但是获得了 `&Box<Node>`s. 好吧, 这个简单, 我们仅需要在引用之间, 对 Box 解引用:
 
 ```rust ,ignore
 impl<T> List<T> {
@@ -336,10 +335,9 @@ error[E0507]: cannot move out of borrowed content
    |                         ^^^^^^^^^ cannot move out of borrowed content
 ```
 
-(ﾉಥ益ಥ）ﾉ﻿ ┻━┻
+(ﾉಥ益ಥ）ﾉ ┻━┻
 
-We forgot `as_ref`, so we're moving the box into `map`, which means it would
-be dropped, which means our references would be dangling:
+我们忘记了 `as_ref`, 所以我们把 Box move 进了 `map`, 这意味着它将被销毁, 我们的指针将会悬空:
 
 ```rust ,ignore
 pub struct Iter<'a, T> {
@@ -389,7 +387,7 @@ error[E0308]: mismatched types
 
 😭
 
-`as_ref` added another layer of indirection we need to remove:
+`as_ref` 添加了一层引用, 我们需要移除掉:
 
 
 ```rust ,ignore
@@ -422,39 +420,31 @@ cargo build
 
 🎉 🎉 🎉
 
-You may be thinking "wow that `&**` thing is really janky", and you're not wrong.
-Normally Rust is very good at doing this kind of conversion implicitly, through
-a process called *deref coercion*, where basically it can insert \*'s
-throughout your code to make it type-check. It can do this because we have the
-borrow checker to ensure we never mess up pointers!
+你可能在想 "`&**` 是真的麻烦", 不必担心.
+Rust 通常非常擅长通过 *自动解引用* 这种隐式转换, 它可以在你的代码中插入 \* 来进行类型检查. 它能做到这一点是因为我们有借出检查器来确保我们不会弄乱指针!
 
-But in this case the closure in conjunction with the fact that we
-have an `Option<&T>` instead of `&T` is a bit too complicated for it to work
-out, so we need to do this for it. Thankfully this is pretty rare, in my experience.
+但是在这种情况下, 闭包加上我们用 `Option<&T>` 替换 `&T` 对于它来说实在是太复杂了, 所以我们需要做点什么. 幸运的是, 在我的经验中, 这种情况很少见.
 
-Just for completeness' sake, we *could* give it a *different* hint with the *turbofish*:
+为了完整起见, 我们可以给它一个不一样的提示, 通过 *Turbofish符号*:
 
 ```rust ,ignore
-    self.next = node.next.as_ref().map::<&Node<T>, _>(|node| &node);
+self.next = node.next.as_ref().map::<&Node<T>, _>(|node| &node);
 ```
 
-See, map is a generic function:
+看, map其实是一个泛型函数.
 
 ```rust ,ignore
 pub fn map<U, F>(self, f: F) -> Option<U>
 ```
 
-The turbofish, `::<>`, lets us tell the compiler what we think the types of those
-generics should be. In this case `::<&Node<T>, _>` says "it should return a
-`&Node<T>`, and I don't know/care about that other type".
+turbofish 符号, `::<>`, 让我们告诉编译器我们认为这些泛型的类型应该是什么. 
+在当前情况下 `::<&Node<T>, _>` 表明 "它应该返回一个`&Node<T>`, 且我并不了解/关心其他类型".
 
-This in turn lets the compiler know that `&node` should have deref coercion
-applied to it, so we don't need to manually apply all those \*'s!
+进而让编译器直到应该对 `&node` 进行强制解引用, 所以我们不需要手动加所有 \*'s!
 
-But in this case I don't think it's really an improvement, this was just a
-thinly veiled excuse to show off deref coercion and the sometimes-useful turbofish. 😅
+但在这种情况下, 我不认为这是真正的改进, 这只是一个掩饰不住的借口, 以炫耀强制解引用和有时有用的turbofish. 😅
 
-Let's write a test to be sure we didn't no-op it or anything:
+让我们编写一个测试，以确保我们没有对它执行空操作或其他操作:
 
 ```rust ,ignore
 #[test]
@@ -485,9 +475,9 @@ test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
 
 ```
 
-Heck yeah.
+欧耶.
 
-Finally, it should be noted that we *can* actually apply lifetime elision here:
+最后, 实际上我们可以省略这的生命周期:
 
 ```rust ,ignore
 impl<T> List<T> {
@@ -497,7 +487,7 @@ impl<T> List<T> {
 }
 ```
 
-is equivalent to:
+它相当于:
 
 ```rust ,ignore
 impl<T> List<T> {
@@ -507,10 +497,10 @@ impl<T> List<T> {
 }
 ```
 
-Yay fewer lifetimes!
+好, 生命周期更少了!
 
-Or, if you're not comfortable "hiding" that a struct contains a lifetime,
-you can use the Rust 2018 "explicitly elided lifetime" syntax,  `'_`:
+或者, 如果你不喜欢隐藏生命周期,
+你可以试试 Rust 2018 "显示省略生命周期" 语法,  `'_`:
 
 ```rust ,ignore
 impl<T> List<T> {
