@@ -1,7 +1,6 @@
 # Final Code
 
-That's all I really have to say on the immutable stack. We're getting pretty
-good at implementing lists now!
+这就是不可变单向链表的全部内容. 我们已经很擅长实现链表了!
 
 ```rust
 use std::rc::Rc;

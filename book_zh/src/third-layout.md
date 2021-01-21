@@ -91,9 +91,7 @@ help: possible candidate is found in another module, you can import it into scop
   |
 ```
 
-Oh dang, sick burn. Unlike everything we used for our mutable lists, Rc is so
-lame that it's not even implicitly imported into every single Rust program.
-*What a loser*.
+炸了. 和我们在可变链表中的完全不一样, Rc 是如此差劲, 以至于没有被默认隐式导入到Rust作用域中. 多么失败啊.
 
 ```rust ,ignore
 use std::rc::Rc;
@@ -123,9 +121,8 @@ warning: field is never used: `next`
    |     ^^^^^^^^^^^^^
 ```
 
-Seems legit. Rust continues to be *completely* trivial to write. I bet we can just
-find-and-replace Box with Rc and call it a day!
+看起来似乎是允许的. Rust 仍旧写的很简单. 我打赌我们把所有 Box 换成 Rc 就可以手工!
 
 ...
 
-No. No we can't.
+不, 实际上不能.
