@@ -1,17 +1,14 @@
-# A Persistent Singly-Linked Stack
+# 一个可持久的Stack实现
 
-Alright, we've mastered the art of mutable singly-linked stacks.
+好了, 我们已经掌握了 可变单链表 的艺术.
 
-Let's move from *single* ownership to *shared* ownership by writing a
-*persistent* immutable singly-linked list. This will be exactly the list
-that functional programmers have come to know and love. You can get the
-head *or* the tail and put someone's head on someone else's tail...
-and... that's basically it. Immutability is a hell of a drug.
+让我们的眼光从 *单* 所有权移向 *共享* 所有权, 通过写一个 *可持久的* 不可变单向链表. 
+这恰好是函数式编程熟悉的 list. 你可以获得一个 head *或* tail , 或者把某一链表的 head 放到另一个链表的 tail...
+再或者... 基本上是这样. 
 
-In the process we'll largely just become familiar with Rc and Arc, but this
-will set us up for the next list which will *change the game*.
+通过这个过程, 我们将逐渐熟悉 Rc 和 Arc, 这将有助于我们的下一个链表实现.
 
-Let's add a new file called `third.rs`:
+让我们创建 `third.rs`:
 
 ```rust ,ignore
 // in lib.rs
@@ -21,4 +18,4 @@ pub mod second;
 pub mod third;
 ```
 
-No copy-pasta this time. This is a clean room operation.
+这次我们不需要复制. 让我们从零开始.
