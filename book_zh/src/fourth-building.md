@@ -1,9 +1,7 @@
-# Building Up
+# 构建
 
-Alright, we'll start with building the list. That's pretty straight-forward
-with this new system. `new` is still trivial, just None out all the fields.
-Also because it's getting a bit unwieldy, let's break out a Node constructor
-too:
+好, 我们开始构建链表. 在这个新系统中很简单. `new` 仍然是微不足道的, 把所有字段设为None即可.
+它会显得很笨重, 让我们把 node 的构造函数单独拿出来:
 
 ```rust ,ignore
 impl<T> Node<T> {
@@ -26,27 +24,23 @@ impl<T> List<T> {
 ```text
 > cargo build
 
-**A BUNCH OF DEAD CODE WARNINGS BUT IT BUILT**
+**一堆 dead code 警告**
 ```
 
 Yay!
 
-Now let's try to write pushing onto the front of the list. Because
-doubly-linked lists are significantly more complicated, we're going to need
-to do a fair bit more work. Where singly-linked list operations could be
-reduced to an easy one-liner, doubly-linked list ops are fairly complicated.
+现在让我们尝试写一个, 向链表前端push的方法. 因为双向链表要复杂得多, 我们需要做更多的工作. 
+单向链表可以简化为简单的一行操作, 而双向链表却很复杂.
 
-In particular we now need to specially handle some boundary cases around
-empty lists. Most operations will only touch the `head` or `tail` pointer.
-However when transitioning to or from the empty list, we need to edit
-*both* at once.
+我们要对一些边界情况进行特殊处理. 大多数只需要操作 `head` 或 `tail` 指针.
+然而当涉及到空链表时, 我们需要操作两端.
 
-An easy way for us to validate if our methods make sense is if we maintain
-the following invariant: each node should have exactly two pointers to it.
-Each node in the middle of the list is pointed at by its predecessor and
-successor, while the nodes on the ends are pointed to by the list itself.
+有一套简单的规则来验证: 
+每个 node 都应该有两个指向它的指针.
+链表中间的每个 node 都由它的前身和后继节点指向, 
+而链表本身指向末端的 node.
 
-Let's take a crack at it:
+让我们来试一试:
 
 ```rust ,ignore
 pub fn push_front(&mut self, elem: T) {
@@ -86,12 +80,12 @@ error[E0609]: no field `next` on type `std::rc::Rc<std::cell::RefCell<fourth::No
    |                          ^^^^ unknown field
 ```
 
-Alright. Compiler error. Good start. Good start.
+嗯. 编译错误. 好的开始.
 
-Why can't we access the `prev` and `next` fields on our nodes? It worked before
-when we just had an `Rc<Node>`. Seems like the `RefCell` is getting in the way.
+为什么我们不能访问到 node 的 `prev` 和 `next` 自选? 以前我们只有 `Rc<Node>` 似乎是有效的. 
+似乎 `RefCell` 是一大障碍.
 
-We should probably check the docs.
+我们应该看看文档.
 
 *Google's "rust refcell"*
 
@@ -163,16 +157,15 @@ We should probably check the docs.
 > scenarios. Consider using `Mutex<T>` if you need shared mutability in a multi-threaded
 > situation.
 
-Hey, Rust's docs continue to be incredibly awesome.
+Rust 的文档一直都很棒.
 
-The meaty bit we care about is this line:
+我们最关心的是这一行:
 
 ```rust ,ignore
 shared_map.borrow_mut().insert("africa", 92388);
 ```
 
-In particular, the `borrow_mut` thing. Seems we need to explicitly borrow a
-RefCell. The `.` operator's not going to do it for us. Weird. Let's try:
+特别是 `borrow_mut` 这个词. 看起来我们需要明确借用 RefCell 了. `.`操作不会为我们做这些. 让我们试试:
 
 ```rust ,ignore
 pub fn push_front(&mut self, elem: T) {
@@ -204,4 +197,4 @@ warning: field is never used: `elem`
    = note: #[warn(dead_code)] on by default
 ```
 
-Hey, it built! Docs win again.
+非常好.

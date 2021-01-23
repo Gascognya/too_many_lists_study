@@ -1,7 +1,6 @@
-# Breaking Down
+# 拆解
 
-`pop_front` should be the same basic logic as `push_front`, but backwards. Let's
-try:
+`pop_front` 基础逻辑和 `push_front` 类似, 但是相反. 让我们试试:
 
 ```rust ,ignore
 pub fn pop_front(&mut self) -> Option<T> {
@@ -35,7 +34,7 @@ error[E0609]: no field `elem` on type `std::rc::Rc<std::cell::RefCell<fourth::No
    |                      ^^^^ unknown field
 ```
 
-ACK. *RefCells*. Gotta `borrow_mut` again I guess...
+是 *RefCells*. 我又要 `borrow_mut` 了...
 
 ```rust ,ignore
 pub fn pop_front(&mut self) -> Option<T> {
@@ -68,17 +67,16 @@ error[E0507]: cannot move out of borrowed content
 
 > cannot move out of borrowed content
 
-Hrm... It seems that Box was *really* spoiling us. `borrow_mut` only gets us
-an `&mut Node<T>`, but we can't move out of that!
+哦... 看来Box *真的* 宠坏我们了. `borrow_mut` 只会给我们一个 `&mut Node<T>`, 但我们不能 move 它!
 
-We need something that takes a `RefCell<T>` and gives us a `T`. Let's check
-[the docs][refcell] for something like that:
+我们需要能传入 `RefCell<T>` 获得 `T`. 让我们看看 
+[文档][refcell] 里的有关内容:
 
 > `fn into_inner(self) -> T`
 >
-> Consumes the RefCell, returning the wrapped value.
+> 消耗掉 RefCell, 返回其中的值.
 
-That looks promising!
+这个看起来靠谱!
 
 ```rust ,ignore
 old_head.into_inner().elem
@@ -94,27 +92,21 @@ error[E0507]: cannot move out of an `Rc`
    |             ^^^^^^^^ cannot move out of an `Rc`
 ```
 
-Ah dang. `into_inner` wants to move out the RefCell, but we can't, because it's
-in an `Rc`. As we saw in the previous chapter, `Rc<T>` only lets us get shared references
-into its internals. That makes sense, because that's *the whole point* of
-reference counted pointers: they're shared!
+坏了. `into_inner` 想要将 RefCell move, 但我们做不到, 因为它在 `Rc` 中. 
+正如我们前一章所说, `Rc<T>` 只能让我们获取其内部的共享引用. 
+这是有道理的, 因为这是 *所有引用计数指针* 的要点: 它们是共享的!
 
-This was a problem for us when we wanted to implement Drop for our reference
-counted list, and the solution is the same: `Rc::try_unwrap`, which moves out
-the contents of an Rc if its refcount is 1.
+当我们想要为引用计数列表实现Drop时也是这个问题, 解决方式是: `Rc::try_unwrap`, 它将移出Rc中的内容, 当引用计数为1时.
 
 ```rust ,ignore
 Rc::try_unwrap(old_head).unwrap().into_inner().elem
 ```
 
-`Rc::try_unwrap` returns a `Result<T, Rc<T>>`. Results are basically a
-generalized `Option`, where the `None` case has data associated with it. In
-this case, the `Rc` you tried to unwrap. Since we don't care about the case
-where it fails (if we wrote our program correctly, it *has* to succeed), we
-just call `unwrap` on it.
+`Rc::try_unwrap` 返回一个 `Result<T, Rc<T>>`. 
+Results 基本上是一个广义的 `Option`, 它的 `None` 情况有与之相关的数据, 当你试图解开 `Rc`. 
+因为我们不关心它失败的情况(如果我们正确地编写了程序, 它 *必须* 成功), 我们只对它调用 `unwrap` .
 
-Anyway, let's see what compiler error we get next (let's face it, there's going
-to be one).
+无论如何, 让我们看看接下来我们会遇到什么编译错误(让我们面对它, 肯定会有一个).
 
 ```text
 > cargo build
@@ -129,33 +121,29 @@ error[E0599]: no method named `unwrap` found for type `std::result::Result<std::
            `std::rc::Rc<std::cell::RefCell<fourth::Node<T>>> : std::fmt::Debug`
 ```
 
-UGH. `unwrap` on Result requires that you can debug-print the error case.
-`RefCell<T>` only implements `Debug` if `T` does. `Node` doesn't implement Debug.
+ Result 的 `unwrap` 需要你可以打印错误情况下的debug信息.
+`RefCell<T>` 只有当 `T` 实现了Debug时, 它才能实现. `Node` 没有实现Debug.
 
-Rather than doing that, let's just work around it by converting the Result to
-an Option with `ok`:
+我们不这么做, 而是将结果转换为带 `ok` 的 Option:
 
 ```rust ,ignore
 Rc::try_unwrap(old_head).ok().unwrap().into_inner().elem
 ```
 
-PLEASE.
+求你了.
 
 ```text
 cargo build
 
 ```
 
-YES.
+好.
 
-*phew*
+我们做到了.
 
-We did it.
+我们实现了 `push` 和 `pop`.
 
-We implemented `push` and `pop`.
-
-Let's test by stealing the old `stack` basic test (because that's all that
-we've implemented so far):
+让我们把之间链表的basic test 抄过来 (因为它的内容我们都实现了):
 
 ```rust ,ignore
 #[cfg(test)]
@@ -213,22 +201,14 @@ test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured
 
 ```
 
-*Nailed it*.
 
-Now that we can properly remove things from the list, we can implement Drop.
-Drop is a little more conceptually interesting this time around. Where
-previously we bothered to implement Drop for our stacks just to avoid unbounded
-recursion, now we need to implement Drop to get *anything* to happen at all.
+现在我们可以从链表中移除东西, 我们可以实现 Drop.
+这一次 Drop 在概念上更有趣一些. 之前的 Drop 是为了处理无限递归, 但这次不同.
 
-`Rc` can't deal with cycles. If there's a cycle, everything will keep everything
-else alive. A doubly-linked list, as it turns out, is just a big chain of tiny
-cycles! So when we drop our list, the two end nodes will have their refcounts
-decremented down to 1... and then nothing else will happen. Well, if our list
-contains exactly one node we're good to go. But ideally a list should work right
-if it contains multiple elements. Maybe that's just me.
+`Rc` 不能处理循环引用. 如果存在循环引用, 所有东西都会让其他东西保持存活. 一个双向链表, 事实证明它是由小循环组成的长链!
+所以当我们删除链表时, 仅仅是两端的引用变为 1... 然后什么也不会发生.如果我们的链表只包含一个节点, 那并没有问题. 但如果链表包含多个元素. 它也理应正常工作.
 
-As we saw, removing elements was a bit painful. So the easiest thing for us to
-do is just `pop` until we get None:
+正如我们看到的, 移除元素比较痛苦. 所以最简单的办法是 `pop` 到没有任何东西:
 
 ```rust ,ignore
 impl<T> Drop for List<T> {
@@ -243,12 +223,9 @@ cargo build
 
 ```
 
-(We actually could have done this with our mutable stacks, but shortcuts are for
-people who understand things!)
+(我们其实可以使用可变堆栈来实现这一点, 但捷径是为那些理解事物的人准备的!)
 
-We could look at implementing the `_back` versions of `push` and `pop`, but
-they're just copy-paste jobs which we'll defer to later in the chapter. For now
-let's look at more interesting things!
+我们可以看看实现 `_back` 版的 `push` 和 `pop`, 但它们仅仅是复制粘贴. 我们将先考虑更有趣的小心!
 
 
 [refcell]: https://doc.rust-lang.org/std/cell/struct.RefCell.html

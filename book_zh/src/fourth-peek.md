@@ -1,4 +1,4 @@
-# Peeking
+# Peek 方法
 
 Alright, we made it through `push` and `pop`. I'm not gonna lie, it got a
 bit emotional there. Compile-time correctness is a hell of a drug.

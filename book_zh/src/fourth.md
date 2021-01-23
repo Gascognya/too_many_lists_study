@@ -1,14 +1,12 @@
-# A Bad but Safe Doubly-Linked Deque
+# 一个BadSafe的Deque实现
 
-Now that we've seen Rc and heard about interior mutability, this gives an
-interesting thought... maybe we *can* mutate through an Rc. And if *that's*
-the case, maybe we can implement a *doubly-linked* list totally safely!
+现在, 你已经看过了 Rc 也听过了内部可变性, 这给了我们一些有趣的启示... 
+也许我们可以把它应用到 Rc. 在这种情况下, 或许我们可以完全安全的实现一个双向链表!
 
-In the process we'll become familiar with *interior mutability*, and probably
-learn the hard way that safe doesn't mean *correct*. Doubly-linked lists are
-hard, and I always make a mistake somewhere.
+在这个过程中, 我们将不断熟悉 *内部可变现*, 并可能艰难的认识到, 安全并不代表正确. 
+双向链表很难, 我们可能会经常犯错.
 
-Let's add a new file called `fourth.rs`:
+建一个新文件 `fourth.rs`:
 
 ```rust ,ignore
 // in lib.rs
@@ -19,7 +17,4 @@ pub mod third;
 pub mod fourth;
 ```
 
-This will be another clean-room operation, though as usual we'll probably find
-some logic that applies verbatim again.
-
-Disclaimer: this chapter is basically a demonstration that this is a very bad idea.
+声明: 这一章将是一个非常糟糕的思路, 请抱着批判的态度来学习.

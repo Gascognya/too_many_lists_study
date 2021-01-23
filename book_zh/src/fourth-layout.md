@@ -1,32 +1,27 @@
-# Layout
+# 内存布局
 
-The key to our design is the `RefCell` type. The heart of
-RefCell is a pair of methods:
+我们设计中的关键在于 `RefCell` 类型. RefCell 的核心是一对方法:
 
 ```rust ,ignore
 fn borrow(&self) -> Ref<'_, T>;
 fn borrow_mut(&self) -> RefMut<'_, T>;
 ```
 
-The rules for `borrow` and `borrow_mut` are exactly those of `&` and `&mut`:
-you can call `borrow` as many times as you want, but `borrow_mut` requires
-exclusivity.
+`borrow` 和 `borrow_mut` 的正如 `&` 和 `&mut`:
+你可以多次调用 `borrow`, 但 `borrow_mut` 需要独占.
 
-Rather than enforcing this statically, RefCell enforces them at runtime.
-If you break the rules, RefCell will just panic and crash the program.
-Why does it return these Ref and RefMut things? Well, they basically behave
-like `Rc`s but for borrowing. They also keep the RefCell borrowed until they go out
-of scope. We'll get to that later.
+RefCell 是运行时检查, 而不是静态检查 (意味着多次调用borrow_mut虽然不允许, 但不会有静态提示).
+如果你打破了规则, RefCell 会抛出 panic 让程序崩溃.
+为什么它返回 Ref 和 RefMut ? 嗯, 它们基本和 `Rc` 一样, 仅仅为了出借. 它们还会保持 RefCell 借用直到离开作用域. 
+我们稍后会将到.
 
-Now with Rc and RefCell we can become... an incredibly verbose pervasively
-mutable garbage collected language that can't collect cycles! Y-yaaaaay...
+现在通过 Rc 和 RefCell 我们可以造就... 
+一种令人难以置信的冗长、无处不在的可变垃圾收集语言且不能处理循环引用! Y-yaaaaay...
 
-Alright, we want to be *doubly-linked*. This means each node has a pointer to
-the previous and next node. Also, the list itself has a pointer to the
-first and last node. This gives us fast insertion and removal on *both*
-ends of the list.
+好, 我们想要双链. 这意味着每个 node 需要指向前一个和后一个 node. 
+此外, 链表也应该包含指向头和尾的指针. 这让我们能在双端快速插入和删除.
 
-So we probably want something like:
+所以我们也许需要:
 
 ```rust ,ignore
 use std::rc::Rc;
@@ -82,4 +77,4 @@ warning: field is never used: `prev`
    |     ^^^^^^^^^^^^^
 ```
 
-Hey, it built! Lots of dead code warnings, but it built! Let's try to use it.
+很多 dead code warnings, 但是它成功构建了! 让我们是这样用一下.
