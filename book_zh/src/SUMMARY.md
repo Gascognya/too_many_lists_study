@@ -28,8 +28,8 @@
     * [内存布局](fourth-layout.md)
     * [构建](fourth-building.md) /*
     * [拆解](fourth-breaking.md)
-    * [Peek 方法](fourth-peek.md) *
-    * [Symmetric Cases](fourth-symmetry.md) *
+    * [Peek 方法](fourth-peek.md)
+    * [尾端的对称方法](fourth-symmetry.md)
     * [Iteration](fourth-iteration.md) *
     * [Final Code](fourth-final.md) *
 * [一个Unsafe的Queue实现](fifth.md) *

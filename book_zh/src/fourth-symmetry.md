@@ -1,8 +1,8 @@
-# Symmetric Junk
+# 尾端的对称方法
 
-Alright let's get all that combinatoric symmetry over with.
+之前我们实现了首段的方法, 现在让我们把末端对称的方法也实现.
 
-All we have to do is some basic text replacement:
+我们只需要做一些基本的文本替换:
 
 ```text
 tail <-> head
@@ -10,7 +10,7 @@ next <-> prev
 front -> back
 ```
 
-Oh, also we need to add `_mut` variants for peeking.
+哦对了, 我们还要加上 `peek_mut` 方法.
 
 ```rust ,ignore
 pub fn push_back(&mut self, elem: T) {
@@ -62,7 +62,7 @@ pub fn peek_front_mut(&mut self) -> Option<RefMut<T>> {
 }
 ```
 
-And massively flesh out our tests:
+在basics测试中加一些:
 
 
 ```rust ,ignore
@@ -138,8 +138,7 @@ fn peek() {
 }
 ```
 
-Are there some cases we're not testing? Probably. The combinatoric space
-has really blown up here. Our code is at very least not *obviously wrong*.
+还有什么没测试的么. 我们的代码至少没有 *明显错误*.
 
 ```text
 > cargo test

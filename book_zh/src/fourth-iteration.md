@@ -1,11 +1,10 @@
 # Iteration
 
-Let's take a crack at iterating this bad-boy.
+让我们来试试 Iter 这个坏家伙.
 
 ## IntoIter
 
-IntoIter, as always, is going to be the easiest. Just wrap the stack and
-call `pop`:
+IntoIter, 总是很简单, 包装链表, 然后一直 `pop` 就好了:
 
 ```rust ,ignore
 pub struct IntoIter<T>(List<T>);

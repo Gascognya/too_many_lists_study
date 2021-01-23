@@ -13,7 +13,7 @@ fn borrow_mut(&self) -> RefMut<'_, T>;
 RefCell 是运行时检查, 而不是静态检查 (意味着多次调用borrow_mut虽然不允许, 但不会有静态提示).
 如果你打破了规则, RefCell 会抛出 panic 让程序崩溃.
 为什么它返回 Ref 和 RefMut ? 嗯, 它们基本和 `Rc` 一样, 仅仅为了出借. 它们还会保持 RefCell 借用直到离开作用域. 
-我们稍后会将到.
+我们稍后会讲到.
 
 现在通过 Rc 和 RefCell 我们可以造就... 
 一种令人难以置信的冗长、无处不在的可变垃圾收集语言且不能处理循环引用! Y-yaaaaay...
