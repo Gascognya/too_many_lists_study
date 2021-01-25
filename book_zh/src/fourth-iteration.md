@@ -23,27 +23,19 @@ impl<T> Iterator for IntoIter<T> {
 }
 ```
 
-But we have an interesting new development. Where previously there was only
-ever one "natural" iteration order for our lists, a Deque is inherently
-bi-directional. What's so special about front-to-back? What if someone wants
-to iterate in the other direction?
+但我们有了一个有趣的新进展. 我们之前的链表都是单向的, 现在是一个, 而现在是双向的. 
+从前到后有什么特别之处? 如果有人想要在另一个方向迭代呢?
 
-Rust actually has an answer to this: `DoubleEndedIterator`. DoubleEndedIterator
-*inherits* from Iterator (meaning all DoubleEndedIterator are Iterators) and
-requires one new method: `next_back`. It has the exact same signature as
-`next`, but it's supposed to yield elements from the other end. The semantics
-of DoubleEndedIterator are super convenient for us: the iterator becomes a
-deque. You can consume elements from the front and back until the two ends
-converge, at which point the iterator is empty.
+Rust 提供了答案: `DoubleEndedIterator`. 
+DoubleEndedIterator继承自 Iterator (意味着所有的 DoubleEndedIterator 都是迭代器) 需要一个新方法: `next_back`. 
+它具有与 `next` 完全相同的特性, 但它应该从另一端产生元素. DoubleEndedIterator 的语义对我们来说非常方便: 
+迭代器变成了deque. 您可以从前面和后面使用元素, 直到两端收敛, 此时迭代器为空.
 
-Much like Iterator and `next`, it turns out that `next_back` isn't really
-something consumers of the DoubleEndedIterator really care about. Rather, the
-best part of this interface is that it exposes the `rev` method, which wraps
-up the iterator to make a new one that yields the elements in reverse order.
-The semantics of this are fairly straight-forward: calls to `next` on the
-reversed iterator are just calls to `next_back`.
+就像 Iterator 和 `next` 一样, 事实证明 `next_back` 并不是 DoubleEndedIterator 的使用方真正该关心的问题. 
+相反, 这个接口最好的地方在于它公开了 `rev` 方法, 该方法将迭代器封装起来, 生成一个新迭代器, 以倒序生成元素. 它的语义相当简单: 
+在反向迭代器上调用 `next` 就是调用 `next_back`.
 
-Anyway, because we're already a deque providing this API is pretty easy:
+我们试着来实现这个API:
 
 ```rust ,ignore
 impl<T> DoubleEndedIterator for IntoIter<T> {
@@ -53,7 +45,7 @@ impl<T> DoubleEndedIterator for IntoIter<T> {
 }
 ```
 
-And let's test it out:
+做个测试:
 
 ```rust ,ignore
 #[test]
@@ -93,13 +85,12 @@ test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured
 
 ```
 
-Nice.
+很好.
 
 ## Iter
 
-Iter will be a bit less forgiving. We'll have to deal with those awful `Ref`
-things again! Because of Refs, we can't store `&Node`s like we did before.
-Instead, let's try to store `Ref<Node>`s:
+Iter 就比较麻烦了. 因为涉及到 `Ref`! 因为 Ref 的存在, 我们不能存储 `&Node`.
+相反, 我们可以试着存储 `Ref<Node>`s:
 
 ```rust ,ignore
 pub struct Iter<'a, T>(Option<Ref<'a, Node<T>>>);
@@ -116,9 +107,7 @@ impl<T> List<T> {
 
 ```
 
-So far so good. Implementing `next` is going to be a bit hairy, but I think
-it's the same basic logic as the old stack IterMut but with extra RefCell
-madness:
+还行. 实现 `next` 有点麻烦, 但我认为它与之前的链表的 IterMut 的基本逻辑相同, 除了涉及到RefCell:
 
 ```rust ,ignore
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -160,16 +149,13 @@ error[E0505]: cannot move out of `node_ref` because it is borrowed
     |                      ^^^^^^^^ move out of `node_ref` occurs here
 ```
 
-Shoot.
+不.
 
-`node_ref` doesn't live long enough. Unlike normal references, Rust doesn't let
-us just split Refs up like that. The Ref we get out of `head.borrow()` is only
-allowed to live as long as `node_ref`, but we end up trashing that in our
-`Ref::map` call.
+`node_ref` 活得不够久. 不像普通引用, Rust 不让我们们将 Ref 分离开. 
+从 `head.borrow()` 中得到的Ref只允许比 `node_ref` 活得久, 但是我们在 `Ref::map` 调用中drop了它.
 
-Coincidentally, as of the moment I am writing this, the function we want was
-actually stabilized 2 days ago. That means it will be a few months before it
-hits the stable release. So let's continue along with the latest nightly build:
+比较巧的是, 在我写这个的时候, 我们想要的函数实际上两天前就稳定下来了. 这意味着它还需要几个月的时间才能发布稳定版. 
+所以让我们使用最新的 nightly 进行 build:
 
 ```rust ,ignore
 pub fn map_split<U, V, F>(orig: Ref<'b, T>, f: F) -> (Ref<'b, U>, Ref<'b, V>) where
@@ -178,7 +164,7 @@ pub fn map_split<U, V, F>(orig: Ref<'b, T>, f: F) -> (Ref<'b, U>, Ref<'b, V>) wh
     V: ?Sized,
 ```
 
-Woof. Let's give it a try...
+让我们试试 ...
 
 ```rust ,ignore
 fn next(&mut self) -> Option<Self::Item> {
@@ -209,11 +195,9 @@ error[E0521]: borrowed data escapes outside of closure
     |             reference to `next` escapes the closure body here
 ```
 
-Ergh. We need to `Ref::Map` again to get our lifetimes right. But `Ref::Map`
-returns a `Ref` and we need an `Option<Ref>`, but we need to go through the
-Ref to map over our Option...
+哦. 我们需要再次 `Ref::Map` 活得正确的生命周期. 但是 `Ref::Map`
+返回一个 `Ref` 而我们需要 `Option<Ref>`, 但是我们需要通过 Ref 来映射我们的 Option...
 
-**stares into distance for a long time**
 
 ??????
 

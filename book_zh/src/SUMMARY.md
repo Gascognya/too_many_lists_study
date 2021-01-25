@@ -30,8 +30,8 @@
     * [拆解](fourth-breaking.md)
     * [Peek 方法](fourth-peek.md)
     * [尾端的对称方法](fourth-symmetry.md)
-    * [Iteration](fourth-iteration.md) *
-    * [Final Code](fourth-final.md) *
+    * [Iteration](fourth-iteration.md) /*
+    * [Final Code](fourth-final.md)
 * [一个Unsafe的Queue实现](fifth.md) *
     * [Layout](fifth-layout.md) *
     * [Unsafe](fifth-unsafe.md) *

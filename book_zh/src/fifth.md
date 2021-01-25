@@ -1,16 +1,12 @@
-# An Unsafe Singly-Linked Queue
+# 一个Unsafe的Queue实现
 
-Ok that reference-counted interior mutability stuff got a little out of
-control. Surely Rust doesn't really expect you to do that sort of thing
-in general? Well, yes and no. Rc and Refcell can be great for handling
-simple cases, but they can get unwieldy. Especially if you
-want to hide that it's happening. There's gotta be a better way!
+引用计数器的内部可变性有些失控了. Rust 肯定不喜欢你这样做吧? 嗯, 是 也 不是. 
+Rc 和 Refcell 可以处理简单情况, 但它们也可能非常笨拙. 
+特别是当你想隐藏实现细节. 我觉得一定有更好的解决方法!
 
-In this chapter we're going to roll back to singly-linked lists and
-implement a singly-linked queue to dip our toes into *raw pointers*
-and *Unsafe Rust*.
+在这一章, 我们将回到单向链表, 实现一个单链队列, 这将涉及到 *裸指针* 和 *Unsafe*.
 
-Let's add a new file called `fifth.rs`:
+让我们建一个 `fifth.rs`:
 
 ```rust ,ignore
 // in lib.rs
@@ -22,7 +18,4 @@ pub mod fourth;
 pub mod fifth;
 ```
 
-Our code is largely going to be derived from second.rs, since a queue is
-mostly an augmentation of a stack in the world of linked lists. Still, we're
-going to go from scratch because there's some fundamental issues we want to
-address with layout and what-not.
+我们的代码由 second.rs 派生, 因为在链表的世界中, 队列是堆栈的扩充. 不过, 我们还是要从头开始, 因为我们还需要解决一些关于布局之类的基本问题.
