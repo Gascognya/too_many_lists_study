@@ -1,18 +1,15 @@
 # Layout
 
-那么单链队列长什么样? Well, when we had a singly-linked stack
-we pushed onto one end of the list, and then popped off the same end. The only
-difference between a stack and a queue is that a queue pops off the *other*
-end. So from our stack implementation we have:
+那么单链队列长什么样? 很好, 当我们有一个单向链表, 从一端压入, 从另一端弹出. 堆栈和普通单链表的唯一去表就是, 从 "另一端" 弹出:
 
 ```text
-input list:
+build:
 [Some(ptr)] -> (A, Some(ptr)) -> (B, None)
 
-stack push X:
+push:
 [Some(ptr)] -> (X, Some(ptr)) -> (A, Some(ptr)) -> (B, None)
 
-stack pop:
+pop:
 [Some(ptr)] -> (A, Some(ptr)) -> (B, None)
 ```
 
@@ -20,8 +17,12 @@ To make a queue, we just need to decide which operation to move to the
 end of the list: push, or pop? Since our list is singly-linked, we can
 actually move *either* operation to the end with the same amount of effort.
 
+为了创建一个队列，我们只需要决定将哪个操作移动到列表的末尾:push，还是pop?因为我们的列表是单链的，所以我们可以用相同的努力将*任一*操作移动到最后。
+
 To move `push` to the end, we just walk all the way to the `None` and set it
 to Some with the new element.
+
+为了将' push '移动到末尾，我们只需一路走到' None '，并使用新元素将其设置为Some。
 
 ```text
 input list:
@@ -33,6 +34,8 @@ flipped push X:
 
 To move `pop` to the end, we just walk all the way to the node *before* the
 None, and `take` it:
+
+要将' pop '移动到最后，我们只需走到* None之前的节点*，然后' take '它:
 
 ```text
 input list:
@@ -50,9 +53,13 @@ about precise asymptotic bounds, just "fast" vs "slow". Queues guarantee
 that push and pop are fast, and walking over the whole list is definitely *not*
 fast.
 
+我们可以今天就做，然后算了，但那样太恶心了!这两种操作都遍历*整个*列表。有些人会说这样的队列实现确实是队列，因为它公开了正确的接口。然而，我相信性能保证是接口的一部分。我不关心精确的渐近界限，只关心“快”与“慢”的区别。队列保证了push和pop是快速的，而遍历整个列表肯定是“不”快速的。
+
 One key observation is that we're wasting a ton of work doing *the same thing*
 over and over. Can we memoize this work? Why, yes! We can store a pointer to
 the end of the list, and just jump straight to there!
+
+一个重要的发现是，我们在反复做“同样的事情”上浪费了大量的工作。我们能记住这项工作吗?为什么,是的!我们可以存储一个指向列表末尾的指针，然后直接跳到那里!
 
 It turns out that only one inversion of `push` and `pop` works with this.
 To invert `pop` we would have to move the "tail" pointer backwards, but
@@ -60,7 +67,9 @@ because our list is singly-linked, we can't do that efficiently.
 If we instead invert `push` we only have to move the "head" pointer
 forwards, which is easy.
 
-Let's try that:
+结果是，只有一个“push”和“pop”的倒置与此工作。要反转' pop '，我们必须将“尾部”指针向后移动，但由于我们的列表是单链的，我们无法有效地做到这一点。如果我们反推“push”，我们只需要向前移动“头”指针，这很简单。
+
+让我们试一下:
 
 ```rust ,ignore
 use std::mem;

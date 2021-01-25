@@ -1,6 +1,5 @@
 use std::mem;
 
-
 pub struct List {
     head: Link
 }
