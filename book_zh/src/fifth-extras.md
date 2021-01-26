@@ -4,8 +4,12 @@ Now that `push` and `pop` are written, everything else is exactly the same
 as the stack case. Only operations that change the length of the list need
 to actually worry about the tail pointer.
 
+现在' push '和' pop '都写好了，其他的一切都和堆栈情况完全一样。只有改变列表长度的操作才真正需要考虑尾部指针。
+
 So let's just steal all that from our second list (be sure to reverse the
 expected test output):
+
+因此，让我们从第二个列表中窃取所有这些内容(确保反转预期的测试输出):
 
 ```rust ,ignore
 // ...
@@ -164,5 +168,9 @@ test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured
 
 Shout-outs to copy-paste programming.
 
+对复制-粘贴编程的喊话。
+
 At first I thought we'd have to mess around with IntoIter, but we still
 conveniently pop in iteration order!
+
+一开始，我认为我们可能会用IntoIter来捣乱，但我们仍然方便地按迭代顺序弹出!

@@ -123,6 +123,8 @@ writing this code that I'm not showing. You can only see me leave off a `mut` or
 `;` so many times before it stops being instructive. Don't worry, we'll see
 plenty of *other* error messages!
 
+现在我将更快地处理impl细节，因为我们应该对这类事情感到很舒服。并不是说您应该期望在第一次尝试时就生成这些代码。我只是略过了一些我们之前经历过的反复试验。实际上，我在写这段代码时犯了很多错误。你只能看到我把“mut”或“;”省略很多次，然后这些词就不再有意义了。不要担心，我们将看到大量的*其他*错误消息!
+
 ```text
 > cargo build
 
@@ -149,7 +151,11 @@ it's dropped. If our `push` implementation compiled, we'd double-free the tail
 of our list! Actually, as written, our code would free the old_tail on every
 push. Yikes! 🙀
 
+Box没有实现复制，所以我们不能把它分配给两个位置。更重要的是，Box *拥有*它指向的东西，并将尝试在它被丢弃时释放它。如果我们的“push”实现编译完成，我们将双倍释放列表的尾部!实际上，正如所写的，我们的代码将在每次push时释放old_tail。呵!🙀
+
 Alright, well we know how to make a non-owning pointer. That's just a reference!
+
+我们知道如何创建一个非所有者指针。这只是一个引用!
 
 ```rust ,ignore
 pub struct List<T> {
@@ -199,6 +205,9 @@ Nothing too tricky here. Same basic idea as the previous code, except we're
 using some of that implicit return goodness to extract the tail reference from
 wherever we stuff the actual Box.
 
+
+这没什么难的。基本思想与前面的代码相同，只是我们使用了一些隐式的return good来从填充实际框的任何地方提取尾部引用。
+
 ```text
 > cargo build
 
@@ -212,6 +221,8 @@ error[E0106]: missing lifetime specifier
 Oh right, we need to give references in types lifetimes. Hmm... what's the
 lifetime of this reference? Well, this seems like IterMut, right? Let's try
 what we did for IterMut, and just add a generic `'a`:
+
+对了，我们需要引用生命周期中的类型。嗯…这个引用的生命周期是多少?这看起来像IterMut，对吧?让我们尝试一下我们对IterMut所做的，只是添加一个通用的“a”:
 
 ```rust ,ignore
 pub struct List<'a, T> {
@@ -297,15 +308,22 @@ note: but, the lifetime must be valid for the lifetime 'a as defined on the impl
 Woah, that's a really detailed error message. That's a bit concerning, because it
 suggests we're doing something really messed up. Here's an interesting part:
 
+哇，这是一条非常详细的错误信息。这有点令人担忧，因为这表明我们正在做一些非常糟糕的事情。这里有一个有趣的部分:
+
 > the lifetime must be valid for the lifetime `'a` as defined on the impl
+
+> 生命周期必须在impl上定义的生命周期“a”内有效
+
 
 We're borrowing from `self`, but the compiler wants us to last as long as `'a`,
 what if we tell it `self` *does* last that long..?
 
+我们借用了' self '，但是编译器想让我们持续的时间和'a '一样长，如果我们告诉它' self '确实持续那么长…
+
 ```rust ,ignore
     pub fn push(&'a mut self, elem: T) {
 ```
-
+'a
 ```text
 cargo build
 
@@ -321,6 +339,8 @@ warning: field is never used: `elem`
 Oh, hey, that worked! Great!
 
 Let's just do `pop` too:
+
+我们也来看看pop:
 
 ```rust ,ignore
 pub fn pop(&'a mut self) -> Option<T> {
@@ -436,11 +456,18 @@ the reason is that Rust can't yet tell that the reference is into ourselves
 from just `push` and `pop` -- or rather, Rust doesn't really have that notion
 at all. Reference-into-yourself failing to work is just an emergent behaviour.
 
+编译器吐了我们一身并没有错。我们刚刚犯了一个严重的错误:我们在我们自己的内部存储了一个对我们自己的引用。我们设法说服Rust相信这在我们的“推送”和“pop”实现中是有意义的。我相信原因是Rust还不能从“push”和“pop”这两个词中分辨出这个词对我们的影响——或者说，Rust根本没有这个概念。不工作只是一种紧急的行为。
+
 As soon as we tried to *use* our list, everything quickly fell apart.
 When we call `push` or `pop`, we promptly store a reference to ourselves in
 ourselves and become *trapped*. We are literally borrowing ourselves.
 
+当我们试图“使用”我们的列表时，一切很快就崩溃了。当我们调用“push”或“pop”时，我们立即在“ourselves”中存储了一个对我们自己的引用，并陷入“陷阱”。我们实际上是在借用自己。
+
+
 Our `pop` implementation hints at why this could be really dangerous:
+
+我们的“pop”实现暗示了为什么这是非常危险的:
 
 ```rust ,ignore
 // ...
@@ -463,6 +490,12 @@ Please. No.
 No instead we're going to go off the rails and use *raw pointers*.
 Our layout is going to look like this:
 
+要是我们忘了呢?然后，我们的尾部将指向从列表中删除的某个节点*。这样的节点将立即被释放，我们将有一个悬浮的指针，Rust应该保护我们不受它的影响!
+事实上，锈蚀正在保护我们免受这种危险。只是在一个非常…* *的* *。
+那么我们能做什么呢?回到地狱?
+请。不。
+不，相反，我们将偏离轨道，使用原始指针*。我们的布局是这样的:
+
 ```rust ,ignore
 pub struct List<T> {
     head: Link<T>,
@@ -480,9 +513,13 @@ struct Node<T> {
 And that's that. None of this wimpy reference-counted-dynamic-borrow-checking
 nonsense! Real. Hard. Unchecked. Pointers.
 
+那就是了。这些没用的引用计数动态借阅检查!真实的。困难的。无节制的。指针。
+
 Let's be C everyone. Let's be C all day.
 
 I'm home. I'm ready.
 
 Hello `unsafe`.
+
+
 
